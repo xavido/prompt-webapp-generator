@@ -80,6 +80,7 @@ export default function CreatePage() {
   const [data, setData] = useState<Record<string, string>>({});
   const [error, setError] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isListening, setIsListening] = useState(false);
 
   const current = steps[step];
   const isLastStep = step === steps.length - 1;
@@ -137,6 +138,40 @@ export default function CreatePage() {
       setIsGenerating(false);
     }
   }
+  function startVoiceInput() {
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+  
+    if (!SpeechRecognition) {
+      setError("El teu navegador no permet entrada per veu. Prova-ho amb Chrome o Edge.");
+      return;
+    }
+  
+    const recognition = new SpeechRecognition();
+    recognition.lang = "ca-ES";
+    recognition.interimResults = false;
+    recognition.continuous = false;
+  
+    recognition.onstart = () => {
+      setIsListening(true);
+      setError("");
+    };
+  
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
+      const transcript = event.results[0][0].transcript;
+      updateCurrentStep(`${currentValue} ${transcript}`.trim());
+    };
+  
+    recognition.onerror = () => {
+      setError("No s'ha pogut transcriure l'àudio.");
+    };
+  
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+  
+    recognition.start();
+  }
 
   return (
     <main className="min-h-screen bg-white px-6 py-10 text-slate-900">
@@ -173,6 +208,16 @@ export default function CreatePage() {
           </p>
 
           <div className="mt-3 flex flex-wrap gap-2">
+          {current.key === "ageRange" && (
+              <button
+                type="button"
+                onClick={startVoiceInput}
+                disabled={isListening}
+                className="rounded-xl border border-slate-300 px-4 py-2 text-sm text-slate-700 disabled:opacity-50"
+              >
+                {isListening ? "Escoltant..." : "Respondre amb veu"}
+              </button>
+            )}
             <button
               type="button"
               disabled
