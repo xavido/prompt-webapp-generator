@@ -140,7 +140,13 @@ export default function CreatePage() {
   }
   function startVoiceInput() {
     const SpeechRecognition =
-      window.SpeechRecognition || window.webkitSpeechRecognition;
+    (window as typeof window & {
+      SpeechRecognition?: any;
+      webkitSpeechRecognition?: any;
+    }).SpeechRecognition ||
+    (window as typeof window & {
+      webkitSpeechRecognition?: any;
+    }).webkitSpeechRecognition;
   
     if (!SpeechRecognition) {
       setError("El teu navegador no permet entrada per veu. Prova-ho amb Chrome o Edge.");
